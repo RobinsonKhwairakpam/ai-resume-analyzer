@@ -9,18 +9,34 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@clerk/nextjs": "^6.0.0",
+    "@google/generative-ai": "^0.24.1",
+    "@prisma/adapter-pg": "^7.0.0",
+    "@prisma/client": "^7.0.0",
+    "@uploadthing/react": "^7.3.3",
+    "dotenv": "^17.2.3",
+    "effect": "^3.18.4",
+    "mammoth": "^1.11.0",
+    "next": "16.0.1",
+    "openai": "^6.8.1",
+    "pdf-parse": "^2.4.5",
+    "pg": "^8.16.3",
     "react": "19.2.0",
     "react-dom": "19.2.0",
-    "next": "16.0.1"
+    "react-dropzone": "^14.3.8",
+    "uploadthing": "^7.7.4"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
+    "@types/pg": "^8.15.6",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "@tailwindcss/postcss": "^4",
-    "tailwindcss": "^4",
     "eslint": "^9",
-    "eslint-config-next": "16.0.1"
+    "eslint-config-next": "16.0.1",
+    "prisma": "^7.0.0",
+    "tailwindcss": "^4",
+    "tsx": "^4.20.6",
+    "typescript": "^5"
   }
 }
