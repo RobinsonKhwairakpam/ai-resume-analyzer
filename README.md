@@ -4,7 +4,7 @@ A modern, AI-powered resume analysis application built with Next.js, NextAuth, P
 
 ## Features
 
-- 🔐 Authentication with NextAuth (Email/Credentials and Google OAuth)
+- 🔐 Authentication with Clerk
 - 📊 AI-powered resume analysis with comprehensive reports
 - 📄 Support for PDF and DOCX resume formats
 - 🎯 ATS score calculation (0-100)
