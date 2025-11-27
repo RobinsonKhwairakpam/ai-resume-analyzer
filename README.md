@@ -1,6 +1,6 @@
 # Resume Analyzer
 
-A modern, AI-powered resume analysis application built with Next.js, NextAuth, Prisma, and PostgreSQL.
+A modern, AI-powered resume analysis application built with Next.js, Clerk, Prisma, and PostgreSQL.
 
 ## Features
 
