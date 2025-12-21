@@ -10,10 +10,8 @@ A modern, AI-powered resume analysis application built with Next.js, Clerk, Pris
 - 🎯 ATS score calculation (0-100)
 - 🔍 Keyword matching analysis
 - 📝 Section-by-section analysis (Skills, Summary, Experience)
-- 💡 Actionable improvement suggestions
-- 🎨 Modern dark theme UI with gradients and shadows
+- 💡 Improvement suggestions
 - 💾 PostgreSQL database with Prisma ORM
-- 📱 Responsive design
 
 ## Getting Started
 
@@ -94,54 +92,3 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to see the
    - Read improvement suggestions
    - View overall assessment
 
-## Project Structure
-
-```
-├── app/
-│   ├── api/
-│   │   └── auth/
-│   │       └── [...nextauth]/     # NextAuth API routes
-│   ├── components/
-│   │   ├── Navbar.tsx              # Navigation bar component
-│   │   └── SignInModal.tsx         # Sign-in modal component
-│   ├── layout.tsx                  # Root layout with Navbar
-│   ├── page.tsx                    # Landing page
-│   └── providers.tsx               # NextAuth SessionProvider
-├── lib/
-│   ├── auth.ts                     # NextAuth configuration
-│   └── prisma.ts                   # Prisma client instance
-├── prisma/
-│   └── schema.prisma               # Database schema
-└── types/
-    └── next-auth.d.ts              # NextAuth TypeScript types
-```
-
-## Authentication
-
-The app supports two authentication methods:
-
-1. **Email/Credentials**: Simple email-based authentication (demo mode - creates user if doesn't exist)
-2. **Google OAuth**: Sign in with Google account
-
-To enable Google OAuth:
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project or select an existing one
-3. Enable Google+ API
-4. Create OAuth 2.0 credentials
-5. Add authorized redirect URI: `http://localhost:3000/api/auth/callback/google`
-6. Copy Client ID and Client Secret to your `.env` file
-
-## Database
-
-The application uses PostgreSQL with Prisma ORM. The schema includes:
-
-- `User` - User accounts
-- `Account` - OAuth account connections
-- `Session` - User sessions
-- `VerificationToken` - Email verification tokens
-
-## Learn More
-
-- [Next.js Documentation](https://nextjs.org/docs)
-- [NextAuth.js Documentation](https://next-auth.js.org/)
-- [Prisma Documentation](https://www.prisma.io/docs)
