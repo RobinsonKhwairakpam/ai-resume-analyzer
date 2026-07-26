@@ -30,7 +30,7 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
         <Providers>
-          <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-black">
+          <div className="min-h-screen bg-[#000000] text-slate-100 selection:bg-purple-500/30 selection:text-purple-200">
             <Navbar />
             {children}
           </div>

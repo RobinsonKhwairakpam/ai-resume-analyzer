@@ -48,3 +48,43 @@ export async function GET(request: NextRequest) {
   }
 }
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId: clerkUserId } = await auth();
+    if (!clerkUserId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const resumeId = searchParams.get("id");
+
+    if (!resumeId) {
+      return NextResponse.json({ error: "Resume ID required" }, { status: 400 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { clerkUserId },
+    });
+
+    if (!user) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    await prisma.resume.delete({
+      where: {
+        id: resumeId,
+        userId: user.id,
+      },
+    });
+
+    return NextResponse.json({ success: true, message: "Resume deleted" });
+  } catch (err: any) {
+    console.error("❌ Error deleting resume:", err);
+    return NextResponse.json(
+      { error: "Failed to delete resume", details: err?.message },
+      { status: 500 }
+    );
+  }
+}
+
+

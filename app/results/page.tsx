@@ -1,5 +1,6 @@
 import { getResumeAnalysis } from "@/lib/data/results";
 import PrintButton from "./PrintButton";
+import Link from "next/link";
 
 interface AnalysisResult {
   sections: {
@@ -47,376 +48,281 @@ interface AnalysisResult {
   overallAssessment: string;
 }
 
-interface AnalysisData {
-  success: boolean;
-  jobTitle: string;
-  jobDescription: string;
-  resumeText: string;
-  analysis: AnalysisResult;
-}
-
 interface ResultsPageProps {
-  searchParams: {
+  searchParams: Promise<{
     resumeId: string;
-  };
+  }>;
 }
 
 export default async function ResultsPage({ searchParams }: ResultsPageProps) {
   const params = await searchParams;
-
   const dataParam = params.resumeId;
   let data = null;
 
   if (dataParam) {
     try {
       data = await getResumeAnalysis(dataParam);
-      console.log(data)
     } catch (error) {
-      console.error("Error parsing searchParams data on server:", error);
+      console.error("Error fetching analysis on server:", error);
     }
   }
 
   if (!data) {
     return (
-      <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-white mb-8">No results found</h1>
-          <a
-            href="/upload" // Use next/link or a standard <a> for navigation
-            className="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:scale-105"
+      <main className="mx-auto max-w-4xl px-4 py-16 text-center">
+        <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-12 space-y-5 shadow-xl">
+          <h1 className="text-2xl font-bold text-slate-100">No results found</h1>
+          <p className="text-sm text-slate-400">The requested resume analysis could not be located.</p>
+          <Link
+            href="/"
+            className="inline-block px-6 py-2.5 text-sm font-bold rounded-xl bg-violet-800 hover:bg-violet-700 text-white transition-all"
           >
-            Go Back to Upload
-          </a>
+            Return to Dashboard
+          </Link>
         </div>
       </main>
     );
   }
 
-  const { aiResponse, jobTitle } = data;
-  // Assuming aiResponse matches the AnalysisResult structure
+  const { aiResponse, jobTitle, fileName } = data;
   const analysis = aiResponse as unknown as AnalysisResult;
 
+  const score = analysis?.atsScore?.score || 0;
   const scoreColor =
-    analysis?.atsScore?.score >= 80
-      ? "text-green-400"
-      : analysis?.atsScore?.score >= 60
-        ? "text-yellow-400"
-        : "text-red-400";
+    score >= 80
+      ? "text-emerald-400"
+      : score >= 60
+      ? "text-amber-400"
+      : "text-rose-400";
 
   return (
-    <main className="mx-auto max-w-6xl px-4 sm:px-6 lg:px-8 py-12">
-      <div className="mb-8">
-        {/* <button
-          onClick={() => router.push("/upload")}
-          className="mb-4 text-gray-400 hover:text-white transition-colors flex items-center gap-2"
-        >
-          <svg
-            className="h-5 w-5"
-            fill="none"
-            stroke="currentColor"
-            viewBox="0 0 24 24"
+    <main className="mx-auto max-w-5xl px-4 sm:px-6 py-10 space-y-8">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#1d162e] pb-6">
+        <div>
+          <Link
+            href="/"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-violet-400 hover:text-violet-300 transition-colors mb-2"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M15 19l-7-7 7-7"
-            />
-          </svg>
-          Back to Upload
-        </button> */}
-        <h1 className="text-4xl font-bold text-white mb-2">
-          Resume Analysis Results
-        </h1>
-        <p className="text-gray-400">Job Title: {jobTitle}</p>
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Back to Dashboard
+          </Link>
+          <h1 className="text-3xl font-black text-slate-100">
+            Resume Analysis Report
+          </h1>
+          <p className="text-sm sm:text-base text-slate-400 mt-1">
+            Role: <span className="text-violet-300 font-bold">{jobTitle || "General Resume Analysis"}</span> {fileName ? `• ${fileName}` : ""}
+          </p>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <PrintButton />
+        </div>
       </div>
 
       {/* ATS Score Card */}
-      <div className="mb-8 rounded-xl border border-gray-600 bg-gray-900/50 p-8 backdrop-blur-sm">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-2xl font-bold text-white">ATS Score</h2>
-          <div className={`text-5xl font-bold ${scoreColor}`}>
-            {analysis?.atsScore?.score}
-            <span className="text-2xl text-gray-400">/100</span>
+      <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 sm:p-8 shadow-xl space-y-6">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 border-b border-[#1d162e] pb-6">
+          <div>
+            <div className="inline-flex items-center gap-2 rounded-full bg-violet-950/40 border border-violet-800/30 px-3.5 py-1 text-xs font-bold text-violet-300 mb-2">
+              ATS Compatibility Rating
+            </div>
+            <h2 className="text-xl font-bold text-slate-100">Overall ATS Score</h2>
+            <p className="text-sm text-slate-400 max-w-lg mt-1.5 leading-relaxed">
+              {analysis?.atsScore?.explanation}
+            </p>
+          </div>
+
+          <div className="flex items-baseline gap-1.5 bg-[#07050d] border border-[#1d162e] px-6 py-4 rounded-2xl text-center self-start md:self-auto">
+            <span className={`text-5xl font-black ${scoreColor}`}>
+              {score}
+            </span>
+            <span className="text-slate-500 font-bold text-lg">/100</span>
           </div>
         </div>
-        <p className="text-gray-300 mb-6">{analysis?.atsScore?.explanation}</p>
+
+        {/* Breakdown Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Formatting</p>
-            <p className="text-xl font-semibold text-white">
-              {analysis?.atsScore?.breakdown?.formatting}
+          <div className="bg-[#07050d] border border-[#1d162e] rounded-xl p-4 space-y-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Formatting</p>
+            <p className="text-2xl font-black text-violet-300">
+              {analysis?.atsScore?.breakdown?.formatting ?? "-"}%
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Keywords</p>
-            <p className="text-xl font-semibold text-white">
-              {analysis?.atsScore?.breakdown?.keywords}
+          <div className="bg-[#07050d] border border-[#1d162e] rounded-xl p-4 space-y-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Keywords</p>
+            <p className="text-2xl font-black text-violet-300">
+              {analysis?.atsScore?.breakdown?.keywords ?? "-"}%
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Relevance</p>
-            <p className="text-xl font-semibold text-white">
-              {analysis?.atsScore?.breakdown?.relevance}
+          <div className="bg-[#07050d] border border-[#1d162e] rounded-xl p-4 space-y-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Relevance</p>
+            <p className="text-2xl font-black text-violet-300">
+              {analysis?.atsScore?.breakdown?.relevance ?? "-"}%
             </p>
           </div>
-          <div>
-            <p className="text-sm text-gray-400 mb-1">Completeness</p>
-            <p className="text-xl font-semibold text-white">
-              {analysis?.atsScore?.breakdown?.completeness}
+          <div className="bg-[#07050d] border border-[#1d162e] rounded-xl p-4 space-y-1">
+            <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Completeness</p>
+            <p className="text-2xl font-black text-violet-300">
+              {analysis?.atsScore?.breakdown?.completeness ?? "-"}%
             </p>
           </div>
         </div>
       </div>
 
-      {/* Keyword Matching */}
-      <div className="mb-8 rounded-xl border border-gray-600 bg-gray-900/50 p-6 backdrop-blur-sm">
-        <h2 className="text-2xl font-bold text-white mb-4">
-          Keyword Matching
-        </h2>
-        <div className="mb-4">
-          <p className="text-lg font-semibold text-white mb-2">
-            Match Percentage: {analysis?.keywordMatching?.matchPercentage}%
-          </p>
-          <div className="w-full bg-gray-800 rounded-full h-3">
+      {/* Keyword Match Card */}
+      {analysis?.keywordMatching && (
+        <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 sm:p-8 shadow-xl space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <h2 className="text-lg font-bold text-slate-100">Keyword Matching</h2>
+            <div className="text-sm font-bold text-violet-300">
+              Match Percentage: {analysis.keywordMatching.matchPercentage}%
+            </div>
+          </div>
+
+          <div className="w-full bg-[#07050d] border border-[#1d162e] rounded-full h-3 overflow-hidden p-0.5">
             <div
-              className="bg-gradient-to-r from-blue-500 to-purple-600 h-3 rounded-full transition-all duration-500"
-              style={{
-                width: `${analysis?.keywordMatching?.matchPercentage}%`,
-              }}
-            ></div>
+              className="bg-violet-600 h-full rounded-full transition-all duration-700"
+              style={{ width: `${analysis.keywordMatching.matchPercentage}%` }}
+            />
           </div>
-        </div>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div>
-            <h3 className="text-green-400 font-semibold mb-2">
-              Matched Keywords ({analysis.keywordMatching.matchedKeywords.length})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {analysis.keywordMatching.matchedKeywords.map((keyword, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded-full bg-green-500/20 text-green-400 text-sm border border-green-500/30"
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
-          </div>
-          <div>
-            <h3 className="text-red-400 font-semibold mb-2">
-              Missing Keywords ({analysis.keywordMatching.missingKeywords.length})
-            </h3>
-            <div className="flex flex-wrap gap-2">
-              {analysis.keywordMatching.missingKeywords.map((keyword, idx) => (
-                <span
-                  key={idx}
-                  className="px-3 py-1 rounded-full bg-red-500/20 text-red-400 text-sm border border-red-500/30"
-                >
-                  {keyword}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-        <p className="text-gray-300 mt-4">{analysis.keywordMatching.analysis}</p>
-      </div>
 
-      {/* Sections Analysis */}
-      <div className="mb-8 space-y-6">
-        {/* Skills Section */}
-        <div className="rounded-xl border border-gray-600 bg-gray-900/50 p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-4">Skills Analysis</h2>
-          <div className="grid md:grid-cols-2 gap-6 mb-4">
-            <div>
-              <h3 className="text-green-400 font-semibold mb-2">
-                Found Skills ({analysis.sections.skills.found.length})
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-2">
+                <span className="size-2 rounded-full bg-emerald-400" />
+                Matched Keywords ({analysis.keywordMatching.matchedKeywords?.length || 0})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {analysis.sections.skills.found.map((skill, idx) => (
+                {analysis.keywordMatching.matchedKeywords?.map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 rounded-full bg-blue-500/20 text-blue-400 text-sm border border-blue-500/30"
+                    className="px-3 py-1 rounded-lg bg-emerald-950/30 border border-emerald-900/40 text-emerald-300 text-xs sm:text-sm font-medium"
                   >
-                    {skill}
+                    {keyword}
                   </span>
                 ))}
               </div>
             </div>
-            <div>
-              <h3 className="text-yellow-400 font-semibold mb-2">
-                Missing Skills ({analysis.sections.skills.missing.length})
+
+            <div className="space-y-3">
+              <h3 className="text-xs font-bold uppercase tracking-wider text-rose-400 flex items-center gap-2">
+                <span className="size-2 rounded-full bg-rose-400" />
+                Missing Keywords ({analysis.keywordMatching.missingKeywords?.length || 0})
               </h3>
               <div className="flex flex-wrap gap-2">
-                {analysis.sections.skills.missing.map((skill, idx) => (
+                {analysis.keywordMatching.missingKeywords?.map((keyword, idx) => (
                   <span
                     key={idx}
-                    className="px-3 py-1 rounded-full bg-yellow-500/20 text-yellow-400 text-sm border border-yellow-500/30"
+                    className="px-3 py-1 rounded-lg bg-rose-950/30 border border-rose-900/40 text-rose-300 text-xs sm:text-sm font-medium"
                   >
-                    {skill}
+                    {keyword}
                   </span>
                 ))}
               </div>
             </div>
           </div>
-          <p className="text-gray-300">{analysis.sections.skills.analysis}</p>
-        </div>
 
-        {/* Summary Section */}
-        <div className="rounded-xl border border-gray-600 bg-gray-900/50 p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-4">Summary Analysis</h2>
-          <div className="mb-4">
-            <span className="px-3 py-1 rounded-full bg-gray-800 text-gray-300 text-sm mr-2">
-              Present: {analysis.sections.summary.present ? "Yes" : "No"}
-            </span>
-            <span className="px-3 py-1 rounded-full bg-gray-800 text-gray-300 text-sm">
-              Quality: {analysis.sections.summary.quality}
-            </span>
-          </div>
-          <p className="text-gray-300 mb-4">{analysis.sections.summary.analysis}</p>
-          {analysis.sections.summary.suggestions.length > 0 && (
-            <div>
-              <h3 className="text-purple-400 font-semibold mb-2">Suggestions:</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-300">
-                {analysis.sections.summary.suggestions.map((suggestion, idx) => (
-                  <li key={idx}>{suggestion}</li>
-                ))}
-              </ul>
-            </div>
+          {analysis.keywordMatching.analysis && (
+            <p className="text-sm text-slate-300 pt-3 border-t border-[#1d162e] leading-relaxed">
+              {analysis.keywordMatching.analysis}
+            </p>
           )}
-        </div>
-
-        {/* Experience Section */}
-        <div className="rounded-xl border border-gray-600 bg-gray-900/50 p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-white mb-4">
-            Experience Analysis
-          </h2>
-          <div className="mb-4">
-            <span className="px-3 py-1 rounded-full bg-gray-600 text-gray-300 text-sm">
-              Relevance: {analysis.sections.experience.relevance}
-            </span>
-          </div>
-          <p className="text-gray-300 mb-4">
-            {analysis.sections.experience.analysis}
-          </p>
-          {analysis.sections.experience.keyAchievements.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-green-400 font-semibold mb-2">
-                Key Achievements:
-              </h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-300">
-                {analysis.sections.experience.keyAchievements.map(
-                  (achievement, idx) => (
-                    <li key={idx}>{achievement}</li>
-                  )
-                )}
-              </ul>
-            </div>
-          )}
-          {analysis.sections.experience.suggestions.length > 0 && (
-            <div>
-              <h3 className="text-purple-400 font-semibold mb-2">Suggestions:</h3>
-              <ul className="list-disc list-inside space-y-1 text-gray-300">
-                {analysis.sections.experience.suggestions.map(
-                  (suggestion, idx) => (
-                    <li key={idx}>{suggestion}</li>
-                  )
-                )}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Positive Feedback */}
-      {analysis.positiveFeedback.length > 0 && (
-        <div className="mb-8 rounded-xl border border-green-800/50 bg-green-900/20 p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-green-400 mb-4">
-            Positive Feedback
-          </h2>
-          <ul className="space-y-2">
-            {analysis.positiveFeedback.map((feedback, idx) => (
-              <li key={idx} className="flex items-start gap-2 text-gray-300">
-                <svg
-                  className="h-5 w-5 text-green-400 mt-0.5 flex-shrink-0"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-                  />
-                </svg>
-                {feedback}
-              </li>
-            ))}
-          </ul>
         </div>
       )}
 
-      {/* Improvements */}
-      {analysis.improvements.length > 0 && (
-        <div className="mb-8 rounded-xl border border-yellow-800/50 bg-yellow-900/20 p-6 backdrop-blur-sm">
-          <h2 className="text-2xl font-bold text-yellow-400 mb-4">
-            Recommended Improvements
-          </h2>
-          <div className="space-y-4">
-            {analysis.improvements.map((improvement, idx) => (
-              <div
-                key={idx}
-                className="border-l-4 border-yellow-500 pl-4 py-2 bg-gray-900/30 rounded-r"
-              >
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="px-2 py-1 rounded text-xs font-semibold bg-gray-800 text-gray-300">
-                    {improvement.category}
-                  </span>
-                  <span
-                    className={`px-2 py-1 rounded text-xs font-semibold ${improvement.priority === "high"
-                      ? "bg-red-500/20 text-red-400"
-                      : improvement.priority === "medium"
-                        ? "bg-yellow-500/20 text-yellow-400"
-                        : "bg-blue-500/20 text-blue-400"
-                      }`}
-                  >
-                    {improvement.priority} priority
-                  </span>
+      {/* Detailed Sections */}
+      {analysis?.sections && (
+        <div className="space-y-6">
+          {analysis.sections.skills && (
+            <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 shadow-xl space-y-4">
+              <h2 className="text-lg font-bold text-slate-100">Skills Evaluation</h2>
+              <div className="grid md:grid-cols-2 gap-5">
+                <div>
+                  <p className="text-sm font-bold text-violet-300 mb-2">
+                    Found Skills ({analysis.sections.skills.found?.length || 0})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.sections.skills.found?.map((s, idx) => (
+                      <span key={idx} className="px-3 py-1 rounded-lg bg-violet-950/40 border border-violet-800/30 text-violet-300 text-xs sm:text-sm font-medium">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
                 </div>
-                <p className="text-gray-300 mb-1">
-                  <span className="font-semibold">Issue:</span> {improvement.issue}
-                </p>
-                <p className="text-gray-300">
-                  <span className="font-semibold">Suggestion:</span>{" "}
-                  {improvement.suggestion}
-                </p>
+                <div>
+                  <p className="text-sm font-bold text-amber-300 mb-2">
+                    Missing Skills ({analysis.sections.skills.missing?.length || 0})
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {analysis.sections.skills.missing?.map((s, idx) => (
+                      <span key={idx} className="px-3 py-1 rounded-lg bg-amber-950/30 border border-amber-900/30 text-amber-300 text-xs sm:text-sm font-medium">
+                        {s}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               </div>
-            ))}
-          </div>
+              <p className="text-sm text-slate-300 pt-2 leading-relaxed">{analysis.sections.skills.analysis}</p>
+            </div>
+          )}
+
+          {analysis.sections.summary && (
+            <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 shadow-xl space-y-3">
+              <h2 className="text-lg font-bold text-slate-100">Executive Summary Analysis</h2>
+              <p className="text-sm text-slate-300 leading-relaxed">{analysis.sections.summary.analysis}</p>
+            </div>
+          )}
+
+          {analysis.sections.experience && (
+            <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 shadow-xl space-y-3">
+              <h2 className="text-lg font-bold text-slate-100">Experience Analysis</h2>
+              <p className="text-sm text-slate-300 leading-relaxed">{analysis.sections.experience.analysis}</p>
+            </div>
+          )}
         </div>
       )}
+
+      {/* Strengths & Improvements */}
+      <div className="grid md:grid-cols-2 gap-6">
+        {analysis?.positiveFeedback && analysis.positiveFeedback.length > 0 && (
+          <div className="rounded-2xl bg-emerald-950/20 border border-emerald-900/30 p-6 space-y-3 shadow-xl">
+            <h2 className="text-base font-bold text-emerald-400">Key Strengths</h2>
+            <ul className="space-y-2 text-sm text-slate-200">
+              {analysis.positiveFeedback.map((item, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span className="text-emerald-400 font-bold">•</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+
+        {analysis?.improvements && analysis.improvements.length > 0 && (
+          <div className="rounded-2xl bg-violet-950/20 border border-violet-900/30 p-6 space-y-3 shadow-xl">
+            <h2 className="text-base font-bold text-violet-300">Recommended Enhancements</h2>
+            <div className="space-y-3">
+              {analysis.improvements.map((item, idx) => (
+                <div key={idx} className="p-3.5 rounded-xl bg-[#07050d] border border-[#1d162e] text-sm space-y-1">
+                  <p className="text-slate-100 font-bold">{item.issue}</p>
+                  <p className="text-slate-400 text-xs sm:text-sm">{item.suggestion}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Overall Assessment */}
-      <div className="rounded-xl border border-purple-800/50 bg-purple-900/20 p-6 backdrop-blur-sm">
-        <h2 className="text-2xl font-bold text-purple-400 mb-4">
-          Overall Assessment
-        </h2>
-        <p className="text-gray-300 leading-relaxed">
-          {analysis.overallAssessment}
-        </p>
-      </div>
-
-      {/* Action Buttons */}
-      <div className="mt-8 flex gap-4">
-        {/* <button
-          onClick={() => router.push("/upload")}
-          className="rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 px-6 py-3 font-semibold text-white transition-all duration-300 hover:scale-105"
-        >
-          Analyze Another Resume
-        </button> */}
-        <PrintButton />
-      </div>
+      {analysis?.overallAssessment && (
+        <div className="rounded-2xl bg-[#0f0b18] border border-[#1d162e] p-6 shadow-xl space-y-2">
+          <h2 className="text-base font-bold text-violet-300">Overall Recruiter Assessment</h2>
+          <p className="text-sm text-slate-300 leading-relaxed">{analysis.overallAssessment}</p>
+        </div>
+      )}
     </main>
   );
 }
