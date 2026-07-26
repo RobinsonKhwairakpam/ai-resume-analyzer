@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { PDFParse } from "pdf-parse";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 
@@ -10,22 +10,179 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 export const runtime = "nodejs";
 export const maxDuration = 60;
 
+function sanitizeAndEscapeJSONStrings(jsonStr: string): string {
+  let inString = false;
+  let isEscaped = false;
+  let result = "";
+
+  for (let i = 0; i < jsonStr.length; i++) {
+    const char = jsonStr[i];
+
+    if (inString) {
+      if (char === '"' && !isEscaped) {
+        inString = false;
+        result += char;
+      } else if (char === '\\' && !isEscaped) {
+        isEscaped = true;
+        result += char;
+      } else {
+        if (isEscaped) {
+          isEscaped = false;
+        }
+        if (char === '\n') {
+          result += '\\n';
+        } else if (char === '\r') {
+          result += '\\r';
+        } else if (char === '\t') {
+          result += '\\t';
+        } else {
+          result += char;
+        }
+      }
+    } else {
+      if (char === '"') {
+        inString = true;
+      }
+      result += char;
+    }
+  }
+
+  return result;
+}
+
 function extractAndParseJSON(rawText: string) {
   let cleaned = rawText.trim();
-  cleaned = cleaned.replace(/^```(?:json)?\s*/i, "").replace(/```$/i, "").trim();
 
-  try {
-    return JSON.parse(cleaned);
-  } catch (firstErr) {
-    const firstBrace = cleaned.indexOf("{");
-    const lastBrace = cleaned.lastIndexOf("}");
-    if (firstBrace !== -1 && lastBrace > firstBrace) {
-      const substring = cleaned.slice(firstBrace, lastBrace + 1);
-      return JSON.parse(substring);
-    }
-    throw firstErr;
+  // Strip markdown code blocks
+  cleaned = cleaned
+    .replace(/^```(?:json)?\s*/gi, "")
+    .replace(/```$/gi, "")
+    .trim();
+
+  const firstBrace = cleaned.indexOf("{");
+  if (firstBrace === -1) {
+    throw new Error("No opening JSON brace found in response");
   }
+
+  cleaned = cleaned.substring(firstBrace);
+
+  // Iteratively attempt to parse backwards from the last '}'
+  // This handles trailing duplicate braces/characters (e.g. `}}` or extra text after the JSON)
+  let lastIndex = cleaned.lastIndexOf("}");
+  while (lastIndex > 0) {
+    const candidate = cleaned.slice(0, lastIndex + 1);
+
+    // Attempt 1: Direct Parse
+    try {
+      return JSON.parse(candidate);
+    } catch {
+      // Attempt 2: Escape raw control characters & trailing commas
+      try {
+        const stringEscaped = sanitizeAndEscapeJSONStrings(candidate);
+        const trailingCommaFixed = stringEscaped.replace(/,\s*([\}\]])/g, "$1");
+        return JSON.parse(trailingCommaFixed);
+      } catch {
+        // Find next candidate closing brace
+        lastIndex = cleaned.lastIndexOf("}", lastIndex - 1);
+      }
+    }
+  }
+
+  throw new Error("Could not parse valid JSON from model response");
 }
+
+// Enforce exact Gemini Schema
+const responseSchema = {
+  type: SchemaType.OBJECT,
+  properties: {
+    sections: {
+      type: SchemaType.OBJECT,
+      properties: {
+        skills: {
+          type: SchemaType.OBJECT,
+          properties: {
+            found: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            missing: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            analysis: { type: SchemaType.STRING },
+          },
+          required: ["found", "missing", "analysis"],
+        },
+        summary: {
+          type: SchemaType.OBJECT,
+          properties: {
+            present: { type: SchemaType.BOOLEAN },
+            quality: { type: SchemaType.STRING },
+            analysis: { type: SchemaType.STRING },
+            suggestions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          },
+          required: ["present", "quality", "analysis", "suggestions"],
+        },
+        experience: {
+          type: SchemaType.OBJECT,
+          properties: {
+            relevance: { type: SchemaType.STRING },
+            analysis: { type: SchemaType.STRING },
+            keyAchievements: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+            suggestions: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+          },
+          required: ["relevance", "analysis", "keyAchievements", "suggestions"],
+        },
+      },
+      required: ["skills", "summary", "experience"],
+    },
+    keywordMatching: {
+      type: SchemaType.OBJECT,
+      properties: {
+        matchedKeywords: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        missingKeywords: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+        matchPercentage: { type: SchemaType.NUMBER },
+        analysis: { type: SchemaType.STRING },
+      },
+      required: ["matchedKeywords", "missingKeywords", "matchPercentage", "analysis"],
+    },
+    atsScore: {
+      type: SchemaType.OBJECT,
+      properties: {
+        score: { type: SchemaType.NUMBER },
+        breakdown: {
+          type: SchemaType.OBJECT,
+          properties: {
+            formatting: { type: SchemaType.NUMBER },
+            keywords: { type: SchemaType.NUMBER },
+            relevance: { type: SchemaType.NUMBER },
+            completeness: { type: SchemaType.NUMBER },
+          },
+          required: ["formatting", "keywords", "relevance", "completeness"],
+        },
+        explanation: { type: SchemaType.STRING },
+      },
+      required: ["score", "breakdown", "explanation"],
+    },
+    positiveFeedback: { type: SchemaType.ARRAY, items: { type: SchemaType.STRING } },
+    improvements: {
+      type: SchemaType.ARRAY,
+      items: {
+        type: SchemaType.OBJECT,
+        properties: {
+          category: { type: SchemaType.STRING },
+          issue: { type: SchemaType.STRING },
+          suggestion: { type: SchemaType.STRING },
+          priority: { type: SchemaType.STRING },
+        },
+        required: ["category", "issue", "suggestion", "priority"],
+      },
+    },
+    overallAssessment: { type: SchemaType.STRING },
+  },
+  required: [
+    "sections",
+    "keywordMatching",
+    "atsScore",
+    "positiveFeedback",
+    "improvements",
+    "overallAssessment",
+  ],
+};
 
 export async function POST(request: NextRequest) {
   try {
@@ -64,7 +221,6 @@ export async function POST(request: NextRequest) {
       ? "General resume assessment without a targeted job description."
       : rawJobDesc.trim();
 
-    // Download file from URL
     const fileResponse = await fetch(fileUrl);
     if (!fileResponse.ok) {
       return NextResponse.json(
@@ -113,58 +269,9 @@ You are an expert resume analyzer and executive recruiter. Analyze the following
 
 RESUME TEXT:
 ${truncatedResume}
-
-Respond ONLY with a valid, raw JSON object (no markdown, no explanations outside JSON) adhering to this schema:
-{
-  "sections": {
-    "skills": {
-      "found": ["Skill 1", "Skill 2"],
-      "missing": ["Missing Skill 1"],
-      "analysis": "Analysis text..."
-    },
-    "summary": {
-      "present": true,
-      "quality": "good",
-      "analysis": "Summary feedback...",
-      "suggestions": ["Suggestion 1"]
-    },
-    "experience": {
-      "relevance": "high",
-      "analysis": "Experience feedback...",
-      "keyAchievements": ["Achievement 1"],
-      "suggestions": ["Suggestion 1"]
-    }
-  },
-  "keywordMatching": {
-    "matchedKeywords": ["Keyword 1"],
-    "missingKeywords": ["Keyword 2"],
-    "matchPercentage": 80,
-    "analysis": "Keyword analysis..."
-  },
-  "atsScore": {
-    "score": 85,
-    "breakdown": {
-      "formatting": 90,
-      "keywords": 80,
-      "relevance": 85,
-      "completeness": 85
-    },
-    "explanation": "ATS score explanation..."
-  },
-  "positiveFeedback": ["Feedback 1", "Feedback 2"],
-  "improvements": [
-    {
-      "category": "Formatting",
-      "issue": "Issue description",
-      "suggestion": "How to improve",
-      "priority": "medium"
-    }
-  ],
-  "overallAssessment": "Overall recruiter assessment..."
-}
 `;
 
-    // Only valid, official Gemini API model identifiers
+    // Production-ready Gemini models list
     const candidateModels = [
       "gemini-3.5-flash",
       "gemini-3.1-flash-lite",
@@ -182,7 +289,10 @@ Respond ONLY with a valid, raw JSON object (no markdown, no explanations outside
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
-          generationConfig: { responseMimeType: "application/json" },
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: responseSchema,
+          },
         });
         const result = await model.generateContent(analysisPrompt);
         const text = result.response.text();
@@ -191,7 +301,7 @@ Respond ONLY with a valid, raw JSON object (no markdown, no explanations outside
           break;
         }
       } catch (err: any) {
-        console.warn(`⚠️ Model '${modelName}' call failed:`, err?.message || err);
+        console.warn(`⚠️ Model '${modelName}' failed:`, err?.message || err);
         lastError = err;
       }
     }
