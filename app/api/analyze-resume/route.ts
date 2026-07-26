@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import mammoth from "mammoth";
 import { PDFParse } from "pdf-parse";
-import { GoogleGenerativeAI, SchemaType } from "@google/generative-ai";
+import { GoogleGenerativeAI, SchemaType, ResponseSchema } from "@google/generative-ai";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import prisma from "@/lib/prisma";
 
@@ -53,7 +53,6 @@ function sanitizeAndEscapeJSONStrings(jsonStr: string): string {
 function extractAndParseJSON(rawText: string) {
   let cleaned = rawText.trim();
 
-  // Strip markdown code blocks
   cleaned = cleaned
     .replace(/^```(?:json)?\s*/gi, "")
     .replace(/```$/gi, "")
@@ -66,23 +65,18 @@ function extractAndParseJSON(rawText: string) {
 
   cleaned = cleaned.substring(firstBrace);
 
-  // Iteratively attempt to parse backwards from the last '}'
-  // This handles trailing duplicate braces/characters (e.g. `}}` or extra text after the JSON)
   let lastIndex = cleaned.lastIndexOf("}");
   while (lastIndex > 0) {
     const candidate = cleaned.slice(0, lastIndex + 1);
 
-    // Attempt 1: Direct Parse
     try {
       return JSON.parse(candidate);
     } catch {
-      // Attempt 2: Escape raw control characters & trailing commas
       try {
         const stringEscaped = sanitizeAndEscapeJSONStrings(candidate);
         const trailingCommaFixed = stringEscaped.replace(/,\s*([\}\]])/g, "$1");
         return JSON.parse(trailingCommaFixed);
       } catch {
-        // Find next candidate closing brace
         lastIndex = cleaned.lastIndexOf("}", lastIndex - 1);
       }
     }
@@ -91,8 +85,8 @@ function extractAndParseJSON(rawText: string) {
   throw new Error("Could not parse valid JSON from model response");
 }
 
-// Enforce exact Gemini Schema
-const responseSchema = {
+// Enforce exact Gemini Schema typed with ResponseSchema
+const responseSchema: ResponseSchema = {
   type: SchemaType.OBJECT,
   properties: {
     sections: {
@@ -271,7 +265,7 @@ RESUME TEXT:
 ${truncatedResume}
 `;
 
-    // Production-ready Gemini models list
+    // Candidate models list
     const candidateModels = [
       "gemini-3.5-flash",
       "gemini-3.1-flash-lite",
