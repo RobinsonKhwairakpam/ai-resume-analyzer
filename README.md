@@ -1,94 +1,97 @@
-# Resume Analyzer
+# 📄 AI Resume Analyzer
 
-A modern, AI-powered resume analysis application built with Next.js, Clerk, Prisma, and PostgreSQL.
+A modern, full-stack, AI-powered resume analysis and ATS optimization platform built with Next.js 16, Google Gemini AI, Clerk, UploadThing, Prisma, and PostgreSQL.
 
-## Features
+---
 
-- 🔐 Authentication with Clerk
-- 📊 AI-powered resume analysis with comprehensive reports
-- 📄 Support for PDF and DOCX resume formats
-- 🎯 ATS score calculation (0-100)
-- 🔍 Keyword matching analysis
-- 📝 Section-by-section analysis (Skills, Summary, Experience)
-- 💡 Improvement suggestions
-- 💾 PostgreSQL database with Prisma ORM
+## ✨ Main Features
 
-## Getting Started
+* **Dashboard:** A dual-pane console presenting live resume analytics (Total Resumes, Avg ATS Score, High Match count), quick search/filtering, and an embedded Quick Scanner.
+* **Context-Aware AI Resume Audit:** Evaluates PDF and DOCX resumes against a targeted job description or performs an executive quality assessment when job details are omitted.
+* **ATS Scoring Engine:** Calculates an overall 0–100% ATS score with detailed breakdown ratings for formatting, keyword density, role relevance, and profile completeness.
+* **Keyword & Skills Matching:** Identifies matched versus missing technical skills and industry keywords to optimize resumes for automated recruitment filters.
+* **Prioritized Improvement Feedback:** Delivers actionable, categorized recommendations for formatting, impact metrics, grammar, and executive summary enhancement.
+* **Multi-Model AI Resilience:** Features automatic failover across candidate Gemini models to handle API rate limits and free-tier quota bottlenecks with zero downtime.
+* **Secure Cloud Storage & Management:** Uploads documents via UploadThing CDN and persists structured JSON reports to a PostgreSQL database.
+* **Report Export & Printing:** Provides one-click native browser printing for offline recruiter reviews and application tracking.
+
+---
+
+## 🛠️ Technologies Used
+
+* **Next.js 16 (App Router):** Full-stack React framework providing hybrid Server & Client Components, file-system routing, and server-side API Route Handlers.
+* **React 19 & TypeScript:** Modern UI library and static type system ensuring reliable, component-driven development and type-safe data flows.
+* **Google Gemini AI (`@google/generative-ai`):** Advanced generative AI SDK utilized with structured JSON schemas (`ResponseSchema`) for AI-powered resume evaluation.
+* **Clerk Authentication (`@clerk/nextjs`):** Secure authentication platform providing edge middleware protection, user session management, and custom sign-in modals.
+* **Prisma ORM & PostgreSQL:** Next-generation ORM and relational database engine managing relational schemas, lazy user upserts, and JSON analysis storage.
+* **UploadThing:** Developer-first file upload infrastructure for securely processing and hosting raw resume document files on a CDN.
+* **Document Parsers (`pdf-parse` & `mammoth`):** Server-side Node.js text extraction engines for extracting plain text from PDF and DOCX documents.
+* **Tailwind CSS v4:** Utility-first CSS framework configured with a custom, sleek dark and soft-violet glassmorphism theme.
+
+---
+
+## 🚀 Getting Started
 
 ### Prerequisites
 
-- Node.js 18+ installed
-- PostgreSQL database (local or remote)
-- OpenAI API key (for AI-powered resume analysis)
+* **Node.js** (v18.0.0 or higher)
+* **PostgreSQL** database instance (local or hosted via Supabase, Neon, Railway, etc.)
+* **Clerk** account for publishable & secret keys
+* **Google Gemini API Key** (from [Google AI Studio](https://aistudio.google.com/))
+* **UploadThing** account for app ID & secret key
 
-### Installation
-
-1. Clone the repository and install dependencies:
+### 1. Clone & Install Dependencies
 
 ```bash
+git clone https://github.com/RobinsonKhwairakpam/ai-resume-analyzer.git
+cd resume-analyzer
 npm install
 ```
 
-2. Set up your environment variables:
+### 2. Configure Environment Variables
 
-Create a `.env` file in the root directory with the following variables:
+Create a `.env` file in the root directory:
 
 ```env
 # Database
 DATABASE_URL="postgresql://user:password@localhost:5432/resume_analyzer?schema=public"
 
-# NextAuth
-NEXTAUTH_URL="http://localhost:3000"
-NEXTAUTH_SECRET="your-secret-key-here-change-in-production"
+# Clerk Authentication
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY="pk_test_..."
+CLERK_SECRET_KEY="sk_test_..."
 
-# Google OAuth (Optional - for Google sign-in)
-GOOGLE_CLIENT_ID=""
-GOOGLE_CLIENT_SECRET=""
+# UploadThing Storage
+UPLOADTHING_SECRET="sk_live_..."
+UPLOADTHING_APP_ID="your-app-id"
 
-# OpenAI API (Required for resume analysis)
-OPENAI_API_KEY="your-openai-api-key-here"
+# Google Gemini AI
+GEMINI_API_KEY="AIzaSy..."
 ```
 
-**Note:** Generate a secure `NEXTAUTH_SECRET` using:
-```bash
-openssl rand -base64 32
-```
-
-3. Set up the database:
+### 3. Database Initialization
 
 ```bash
 # Generate Prisma Client
 npx prisma generate
 
-# Run migrations
-npx prisma migrate dev
-
-# (Optional) Open Prisma Studio to view your database
-npx prisma studio
+# Push database schema to PostgreSQL
+npx prisma db push
 ```
 
-4. Run the development server:
+### 4. Run Development Server
 
 ```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser to view the application.
 
-## Usage
+---
 
-1. **Sign In**: Click "Sign In" in the navbar or use the "Upload Resume" button to be prompted to sign in.
+## 📚 Technical Documentation & Guides
 
-2. **Upload Resume**: 
-   - Click "Upload Resume" on the homepage
-   - Fill in the Job Title and Job Description fields
-   - Upload your resume (PDF or DOCX format)
-   - Click "Analyze Resume"
+For in-depth architecture explanations and code walkthroughs, refer to the included technical guides:
 
-3. **View Results**: 
-   - Review your ATS score (0-100)
-   - Check keyword matching analysis
-   - Review section-by-section feedback (Skills, Summary, Experience)
-   - Read improvement suggestions
-   - View overall assessment
-
+* 📖 **[Interview Q&A Guide](interview_qa.md):** 10 core technical interview questions and model answers about the project's architecture, AI fallback mechanisms, and system design.
+* 💻 **[Key Code Snippets](key_code_snippets.md):** Production code snippets covering Clerk auth, Gemini `ResponseSchema`, state-machine JSON escaping, and Prisma schema data layer.
+* 🏗️ **[Next.js Architecture & Features](nextjs_architecture_and_features.md):** Next.js App Router folder hierarchy, Server vs. Client Components, API Route Handlers, and end-to-end data sequence diagrams.

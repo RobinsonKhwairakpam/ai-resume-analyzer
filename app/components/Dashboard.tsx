@@ -136,9 +136,9 @@ export default function Dashboard() {
   const scoredResumes = resumes.filter((r) => r.atsScore !== null);
   const avgScore = scoredResumes.length
     ? Math.round(
-        scoredResumes.reduce((acc, curr) => acc + (curr.atsScore || 0), 0) /
-          scoredResumes.length
-      )
+      scoredResumes.reduce((acc, curr) => acc + (curr.atsScore || 0), 0) /
+      scoredResumes.length
+    )
     : 0;
   const highMatchCount = resumes.filter((r) => (r.atsScore || 0) >= 80).length;
 
@@ -167,11 +167,11 @@ export default function Dashboard() {
         )}
         <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-12 space-y-12">
           {/* Guest Hero Box */}
-          <div className="relative overflow-hidden rounded-3xl bg-[#0f0b18] border border-[#1d162e] p-8 sm:p-14 text-center space-y-6 shadow-2xl">
-            <div className="inline-flex items-center gap-2 rounded-full bg-violet-950/40 border border-violet-800/30 px-4 py-1.5 text-sm font-semibold text-violet-300">
+          <div className="mt-16 relative overflow-hidden rounded-3xl bg-[#0f0b18] border border-[#1d162e] p-8 sm:p-14 text-center space-y-6 shadow-2xl">
+            {/* <div className="inline-flex items-center gap-2 rounded-full bg-violet-950/40 border border-violet-800/30 px-4 py-1.5 text-sm font-semibold text-violet-300">
               <span className="size-2 rounded-full bg-violet-400" />
               AI Resume Command Center
-            </div>
+            </div> */}
 
             <div className="space-y-4 max-w-3xl mx-auto">
               <h1 className="text-4xl sm:text-5xl font-black text-slate-100 tracking-tight leading-tight">
@@ -199,7 +199,7 @@ export default function Dashboard() {
           </div>
 
           {/* Quick Feature Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="bg-[#0f0b18] border border-[#1d162e] rounded-2xl p-6 space-y-3">
               <div className="size-10 rounded-xl bg-violet-950/50 border border-violet-800/30 flex items-center justify-center text-violet-300 text-lg font-bold">
                 📊
@@ -229,7 +229,7 @@ export default function Dashboard() {
                 Receive prioritised advice to highlight key achievements and remove ATS red flags.
               </p>
             </div>
-          </div>
+          </div> */}
         </div>
       </>
     );
@@ -253,7 +253,7 @@ export default function Dashboard() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#1d162e] pb-6">
         <div>
           <h1 className="text-3xl font-black text-slate-100 tracking-tight">
-            Workspace Console
+            Workspace
           </h1>
           <p className="text-sm text-slate-400 mt-1">
             Welcome back, <span className="text-violet-300 font-bold">{userName}</span>. Here is your resume performance summary.
@@ -424,11 +424,10 @@ export default function Dashboard() {
             <div className="space-y-1.5 text-sm">
               <button
                 onClick={() => setFilterTab("all")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${
-                  filterTab === "all"
-                    ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
-                }`}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${filterTab === "all"
+                  ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
+                  }`}
               >
                 <span>All Resumes</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#07050d] text-slate-300 font-semibold">{resumes.length}</span>
@@ -436,11 +435,10 @@ export default function Dashboard() {
 
               <button
                 onClick={() => setFilterTab("high")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${
-                  filterTab === "high"
-                    ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
-                }`}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${filterTab === "high"
+                  ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
+                  }`}
               >
                 <span>High Score (80%+)</span>
                 <span className="text-xs px-2 py-0.5 rounded-full bg-[#07050d] text-emerald-400 font-bold">{highMatchCount}</span>
@@ -448,11 +446,10 @@ export default function Dashboard() {
 
               <button
                 onClick={() => setFilterTab("recent")}
-                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${
-                  filterTab === "recent"
-                    ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
-                    : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
-                }`}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-left transition-colors ${filterTab === "recent"
+                  ? "bg-violet-950/50 border border-violet-800/40 text-violet-200 font-bold"
+                  : "text-slate-400 hover:text-slate-200 hover:bg-[#150f24]"
+                  }`}
               >
                 <span>Recent (Past 7 days)</span>
               </button>
@@ -489,8 +486,8 @@ export default function Dashboard() {
                     ? ats >= 80
                       ? "text-emerald-400 border-emerald-900/40 bg-emerald-950/30"
                       : ats >= 60
-                      ? "text-amber-400 border-amber-900/40 bg-amber-950/30"
-                      : "text-rose-400 border-rose-900/40 bg-rose-950/30"
+                        ? "text-amber-400 border-amber-900/40 bg-amber-950/30"
+                        : "text-rose-400 border-rose-900/40 bg-rose-950/30"
                     : "text-slate-400 border-slate-800 bg-slate-900/50";
 
                 return (

@@ -143,9 +143,37 @@ We made Job Title and Job Description **optional**.
 
 ---
 
+### Q7: How do you calculate the ATS score from the resume?
+**Answer:**
+The ATS score is calculated through a **weighted multi-factor rubric** evaluated by Gemini AI using strict JSON schema constraints (`ResponseSchema`), returning both an aggregate score (0–100%) and four granular component metrics:
+
+1. **Four Weighted Scoring Pillars:**
+   - **Formatting & Parseability (25% Weight):** Evaluates clean document structure, standard section headers (Experience, Skills, Education), font readability, and avoidance of complex multi-column layouts or tables that cause parser glitches.
+   - **Keyword & Skills Matching (30% Weight):** Compares technical skills, tools, and domain keywords extracted from the resume against the target Job Description (or industry-standard developer benchmarks if general analysis).
+   - **Role Relevance & Experience Alignment (25% Weight):** Assesses how closely past job titles, project domains, and professional responsibilities match the target position.
+   - **Quantifiable Impact & Completeness (20% Weight):** Evaluates the density of metric-driven bullet points (e.g., *"improved application speed by 60%"*), presence of professional summaries, education details, and active GitHub/LinkedIn profile URLs.
+
+2. **Schema & Backend Data Pipeline:**
+   Inside `app/api/analyze-resume/route.ts`, Gemini returns the score structured as:
+   ```json
+   "atsScore": {
+     "score": 85,
+     "breakdown": {
+       "formatting": 90,
+       "keywords": 80,
+       "relevance": 85,
+       "completeness": 85
+     },
+     "explanation": "ATS score explanation..."
+   }
+   ```
+   The API parses `atsScore.score`, casts it to a float, and stores it in PostgreSQL via Prisma (`atsScore: parseFloat(...)`) so the Dashboard can perform instant KPI aggregations, sorting, and high-score badge filtering.
+
+---
+
 ## Part 4: Authentication, Database & Security
 
-### Q7: How is Authentication handled and synchronized with your database?
+### Q8: How is Authentication handled and synchronized with your database?
 **Answer:**
 We use **Clerk Authentication** (`@clerk/nextjs`).
 
@@ -166,7 +194,7 @@ This ensures a local PostgreSQL `User` record always exists and is foreign-key l
 
 ---
 
-### Q8: Explain your database schema design.
+### Q9: Explain your database schema design.
 **Answer:**
 We use **PostgreSQL** managed through **Prisma ORM**. The schema consists of two core models connected via a 1-to-Many relationship:
 
@@ -191,7 +219,7 @@ We use **PostgreSQL** managed through **Prisma ORM**. The schema consists of two
 
 ## Part 5: Next.js App Router Architecture & UI
 
-### Q9: Why did you choose Next.js App Router, and how do Server Components differ from Client Components in your app?
+### Q10: Why did you choose Next.js App Router, and how do Server Components differ from Client Components in your app?
 **Answer:**
 Next.js App Router gives us a hybrid architecture optimizing both performance and reactivity:
 
@@ -200,7 +228,7 @@ Next.js App Router gives us a hybrid architecture optimizing both performance an
 
 ---
 
-### Q10: How would you scale this application to handle 100,000 daily uploads?
+### Q11: How would you scale this application to handle 100,000 daily uploads?
 **Answer:**
 To scale the application for high throughput:
 
