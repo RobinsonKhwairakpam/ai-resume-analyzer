@@ -316,7 +316,7 @@ export default function Dashboard() {
                 Quick Resume Scanner
               </h2>
               <p className="text-xs text-slate-400 mt-1">
-                Drop your file here for instant AI assessment. Job details are optional.
+                Drop your file here for instant AI assessment.
               </p>
             </div>
 
