@@ -88,10 +88,3 @@ Open [http://localhost:3000](http://localhost:3000) in your browser to view the 
 
 ---
 
-## 📚 Technical Documentation & Guides
-
-For in-depth architecture explanations and code walkthroughs, refer to the included technical guides:
-
-* 📖 **[Interview Q&A Guide](interview_qa.md):** 10 core technical interview questions and model answers about the project's architecture, AI fallback mechanisms, and system design.
-* 💻 **[Key Code Snippets](key_code_snippets.md):** Production code snippets covering Clerk auth, Gemini `ResponseSchema`, state-machine JSON escaping, and Prisma schema data layer.
-* 🏗️ **[Next.js Architecture & Features](nextjs_architecture_and_features.md):** Next.js App Router folder hierarchy, Server vs. Client Components, API Route Handlers, and end-to-end data sequence diagrams.
